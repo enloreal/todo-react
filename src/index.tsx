@@ -1,12 +1,15 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App";
+import App, { StoreContext } from "./App"; // Импортируем StoreContext из App.tsx
+import todoStore from "./store/todoStore";
 
 const rootElement = document.getElementById("root")!;
 const root = ReactDOM.createRoot(rootElement);
 
 root.render(
   <React.StrictMode>
-    <App />
+    <StoreContext.Provider value={{ todoStore }}>
+      <App />
+    </StoreContext.Provider>
   </React.StrictMode>
 );

@@ -1,17 +1,8 @@
-import React, { useState, useEffect, ChangeEvent } from "react";
+import React, { useState, useEffect, ChangeEvent, createContext, useContext } from "react";
 import Task from "./Task";
 import { TaskItem } from "./types";
 import { ThemeProvider } from "styled-components";
 import TaskEdit from "./TaskEdit";
-import {
-  fetchInitialTasks,
-  addTask as addTaskService,
-  deleteTask as deleteTaskService,
-  toggleTask as toggleTaskService,
-  markAllCompleted as markAllCompletedService,
-  deleteCompleted as deleteCompletedService,
-  updateTask as updateTaskService,
-} from "./services/todoService";
 import {
   darkTheme,
   lightTheme,
@@ -24,69 +15,68 @@ import {
   ErrorMessage,
   StyledButton,
 } from "./styles/themes";
+import { observer } from "mobx-react-lite";
+import todoStore from "./store/todoStore";
 
-const App: React.FC = () => {
-  const [tasks, setTasks] = useState<TaskItem[]>([]);
-  const [newTaskText, setNewTaskText] = useState<string>("");
-  const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string>("");
+// Создаем контекст для store
+export const StoreContext = createContext({} as { todoStore: typeof todoStore });
+
+// Хук для доступа к store
+export const useStore = () => useContext(StoreContext);
+
+
+const App: React.FC = observer(() => {
+  const { todoStore } = useStore();
+
   const [theme, setTheme] = useState("light");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const initializeTasks = async () => {
       setIsLoading(true);
-      try {
-        const { tasks: initialTasks, message } = await fetchInitialTasks();
-        setTasks(initialTasks);
-        setErrorMessage(message);
-      } catch (error) {
-        setErrorMessage("❗Error loading tasks❗");
-      } finally {
-        setIsLoading(false);
-      }
+      await todoStore.fetchInitialTasks(); // Используем функцию из store
+      setIsLoading(false);
     };
 
     initializeTasks();
   }, []);
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setNewTaskText(event.target.value);
+    todoStore.setNewTaskText(event.target.value);
   };
 
   const addTask = () => {
-    setTasks((tasks) => addTaskService(tasks, newTaskText));
-    setNewTaskText("");
+    todoStore.addTask();
   };
 
   const deleteTask = (id: number) => {
-    setTasks((tasks) => deleteTaskService(tasks, id));
+    todoStore.deleteTask(id);
   };
 
   const toggleTask = (id: number) => {
-    setTasks((tasks) => toggleTaskService(tasks, id));
+    todoStore.toggleTask(id);
   };
 
   const markAllCompleted = () => {
-    setTasks((tasks) => markAllCompletedService(tasks));
+    todoStore.markAllCompleted();
   };
 
   const deleteCompleted = () => {
-    setTasks((tasks) => deleteCompletedService(tasks));
+    todoStore.deleteCompleted();
   };
 
   const handleEditTask = (task: TaskItem) => {
-    setEditingTask(task);
+    todoStore.startEditingTask(task);
   };
 
   const handleCancelEdit = () => {
-    setEditingTask(null);
+    todoStore.cancelEditingTask();
   };
 
   const handleSaveEdit = (updatedTask: TaskItem) => {
-    setTasks((tasks) => updateTaskService(tasks, updatedTask));
-    setEditingTask(null);
+    todoStore.updateTask(updatedTask);
   };
+
 
   const switchTheme = () => {
     setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
@@ -95,7 +85,7 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme === "light" ? lightTheme : darkTheme}>
       <MainContainer>
-        {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
+        {todoStore.message && <ErrorMessage>{todoStore.message}</ErrorMessage>}
         <StyledButtonThemes onClick={switchTheme}>☀️🌙</StyledButtonThemes>
         <FunctionalTitle>with functional components</FunctionalTitle>
         <h1>Task Manager</h1>
@@ -110,7 +100,7 @@ const App: React.FC = () => {
           <StyledInput
             type="text"
             placeholder="Enter task"
-            value={newTaskText}
+            value={todoStore.newTaskText} // Используем значение из store
             onChange={handleInputChange}
           />
           <StyledButton onClick={addTask}>Add</StyledButton>
@@ -119,14 +109,14 @@ const App: React.FC = () => {
           <div>Loading tasks...⏳</div>
         ) : (
           <>
-            {editingTask ? (
+            {todoStore.editingTask ? ( // Используем значение из store
               <TaskEdit
-                task={editingTask}
+                task={todoStore.editingTask} // Используем значение из store
                 onSave={handleSaveEdit}
                 onCancel={handleCancelEdit}
               />
             ) : (
-              tasks.map((task) => (
+              todoStore.tasks.map((task) => ( // Используем значение из store
                 <Task
                   key={task.id}
                   task={task}
@@ -141,6 +131,7 @@ const App: React.FC = () => {
       </MainContainer>
     </ThemeProvider>
   );
-};
+});
+
 
 export default App;
