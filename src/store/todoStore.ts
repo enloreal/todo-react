@@ -1,6 +1,7 @@
 import { makeAutoObservable } from "mobx";
 import { TaskItem } from "../types";
 import { handleDeleteTask, updateTask, handleAddTask, fetchTasks as apiFetchTasks } from "../api";
+import { createContext, useContext } from 'react';
 
 class TodoStore {
     tasks: TaskItem[] = [];
@@ -16,10 +17,8 @@ class TodoStore {
         try {
             const fetchedTasks = await apiFetchTasks();
             this.tasks = fetchedTasks;
-            this.message = "❗Tasks loaded from server❗";
         } catch (error) {
             console.error("Error fetching tasks:", error);
-            this.message = "❗Error loading tasks❗";
         }
     }
 
@@ -60,14 +59,14 @@ class TodoStore {
           }
         });
         this.tasks = this.tasks.map((task) => ({ ...task, completed: true }));
-      }
+    }
 
     deleteCompleted() {
         this.tasks.filter((task) => task.completed).forEach((task) => {
           handleDeleteTask(task.documentId);
         });
         this.tasks = this.tasks.filter((task) => !task.completed);
-      }
+    }
     
 
     startEditingTask(task: TaskItem) {
@@ -95,5 +94,6 @@ class TodoStore {
         this.newTaskText = text;
     }
 }
+
 
 export default new TodoStore();

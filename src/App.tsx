@@ -12,16 +12,14 @@ import {
   FunctionalTitle,
   ControlButton,
   StyledButtonThemes,
-  ErrorMessage,
   StyledButton,
 } from "./styles/themes";
 import { observer } from "mobx-react-lite";
 import todoStore from "./store/todoStore";
 
-// Создаем контекст для store
+
 export const StoreContext = createContext({} as { todoStore: typeof todoStore });
 
-// Хук для доступа к store
 export const useStore = () => useContext(StoreContext);
 
 
@@ -34,7 +32,7 @@ const App: React.FC = observer(() => {
   useEffect(() => {
     const initializeTasks = async () => {
       setIsLoading(true);
-      await todoStore.fetchInitialTasks(); // Используем функцию из store
+      await todoStore.fetchInitialTasks();
       setIsLoading(false);
     };
 
@@ -100,7 +98,7 @@ const App: React.FC = observer(() => {
           <StyledInput
             type="text"
             placeholder="Enter task"
-            value={todoStore.newTaskText} // Используем значение из store
+            value={todoStore.newTaskText} 
             onChange={handleInputChange}
           />
           <StyledButton onClick={addTask}>Add</StyledButton>
@@ -109,14 +107,14 @@ const App: React.FC = observer(() => {
           <div>Loading tasks...⏳</div>
         ) : (
           <>
-            {todoStore.editingTask ? ( // Используем значение из store
+            {todoStore.editingTask ? ( 
               <TaskEdit
-                task={todoStore.editingTask} // Используем значение из store
+                task={todoStore.editingTask} 
                 onSave={handleSaveEdit}
                 onCancel={handleCancelEdit}
               />
             ) : (
-              todoStore.tasks.map((task) => ( // Используем значение из store
+              todoStore.tasks.map((task) => ( 
                 <Task
                   key={task.id}
                   task={task}

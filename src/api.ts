@@ -6,12 +6,8 @@ export async function fetchTasks(): Promise<TaskItem[]> {
   try {
     const response = await fetch(API_URL);
     const data = await response.json();
-    return data.data.map((item: any) => ({
-      id: item.id,
-      text: item.text,
-      completed: item.completed,
-      documentId: item.documentId,
-    }));
+    return data.data;
+
   } catch (error: any) {
     console.error("Error while fetching tasks:");
     throw new Error("Failed to fetch tasks. Please try again later.");
@@ -32,13 +28,13 @@ export async function handleAddTask(taskText: string): Promise<TaskItem> {
         },
       }),
     });
-const newTask = await response.json();
-return {
-  id: newTask.data.id,
-  documentId: newTask.data.documentId,
-  text: newTask.data.text,
-  completed: newTask.data.completed,
-};
+  const newTask = await response.json();
+  return {
+    id: newTask.data.id,
+    documentId: newTask.data.documentId,
+    text: newTask.data.text,
+    completed: newTask.data.completed,
+  };
   } catch (error: any) {
     console.error("Error adding task:");
     throw new Error("Failed to add task. Please try again later.");
